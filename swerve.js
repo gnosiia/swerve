@@ -1,21 +1,23 @@
-// ===== Satelite (jogador) =====
 var FONT = 'Orbitron, monospace';
 var SPRITES = new Image();
 SPRITES.src = 'sprites.png';
 var TAM = 64;
-var FRAMES_SAT = [0, 7, 6, 0]; // quadro do satélite por número de vidas (índice = vidas)
-var FRAME_EXPLOSAO = 8;        // primeiro quadro da explosão
-var N_EXPLOSAO = 6;            // quantidade de quadros da explosão
+var FRAMES_SAT = [0, 7, 6, 0]; 
+var FRAME_EXPLOSAO = 8;
+var N_EXPLOSAO = 6;
+
 
 function Satelite(x, y) {
   this.x = x;
   this.y = y;
   this.r = 12;
-  this.vx = 0;          // velocidade atual (horizontal)
-  this.vy = 0;          // velocidade atual (vertical)
+  this.vx = 0;          // velocidade atual horizontal
+  this.vy = 0;          // velocidade atual vertical
   this.acel = 500;      // aceleração em px/s²
   this.atrito = 0.8;    // 0 = desliza para sempre; maior = para mais rápido
   this.velMax = 320;    // velocidade máxima em px/s
+  this.rot = 0;      // ângulo atual (radianos)
+  this.giro = 0.5;   // velocidade de rotação (radianos por segundo)
 }
 
 Satelite.prototype.atualizar = function (dt, teclas, W, H) {
@@ -43,6 +45,9 @@ Satelite.prototype.atualizar = function (dt, teclas, W, H) {
   this.x += this.vx * dt;
   this.y += this.vy * dt;
 
+  // rotaciona o satélite 
+  this.rot = (this.vx / this.velMax) * 0.4;
+
   // RN005: não sai do canvas (e perde a velocidade ao bater na borda)
   if (this.x < this.r) { this.x = this.r; this.vx = 0; }
   else if (this.x > W - this.r) { this.x = W - this.r; this.vx = 0; }
@@ -52,10 +57,14 @@ Satelite.prototype.atualizar = function (dt, teclas, W, H) {
 
 Satelite.prototype.desenhar = function (ctx, vidas) {
   var t = 48;
-  ctx.drawImage(SPRITES, FRAMES_SAT[vidas] * TAM, 0, TAM, TAM, this.x - t / 2, this.y - t / 2, t, t);
+  ctx.save();
+  ctx.translate(this.x, this.y);
+  ctx.rotate(this.rot);
+  ctx.drawImage(SPRITES, FRAMES_SAT[vidas] * TAM, 0, TAM, TAM, -t / 2, -t / 2, t, t);
+  ctx.restore();
 };
 
-// ===== Lixo espacial =====
+
 function Lixo(W, H, vel) {
   this.r = 10 + Math.random() * 16;
   var lado = Math.floor(Math.random() * 4);
@@ -94,7 +103,7 @@ Lixo.prototype.desenhar = function (ctx) {
   ctx.restore();
 };
 
-// ===== Jogo =====
+
 function Jogo(canvas) {
   var self = this;
   this.ctx = canvas.getContext('2d');
@@ -240,5 +249,6 @@ Jogo.prototype.loop = function (t) {
   this.desenhar();
   requestAnimationFrame(function (x) { self.loop(x); });
 };
+
 
 new Jogo(document.getElementById('tela'));
